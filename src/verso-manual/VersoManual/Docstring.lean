@@ -1246,7 +1246,7 @@ where
     | _ => []
 
 open Lean Elab Term in
-def tryElabBlockCode (str : String) : DocElabM Term := do
+def tryElabBlockCode (_ _ : Option String) (str : String) : DocElabM Term := do
   try
     attempt str [
       tryElabBlockCodeCommand,
