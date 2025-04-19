@@ -22,7 +22,7 @@ here as ordered handlers, rather than as a mapping from levels to handlers.
 Because we're rendering Markdown in a Verso context that doesn't support nesting structure, will not
 generate nested `Part`s, but rather some custom node or some formatted text.
 -/
-private structure HeaderHandlers (m : Type u → Type w) (block : Type u) (inline : Type v) : Type (max u v w) where
+structure HeaderHandlers (m : Type u → Type w) (block : Type u) (inline : Type v) : Type (max u v w) where
   levels : List (Array inline → m block) := []
 
 structure MDContext (m : Type u → Type w) (block : Type u) (inline : Type u) : Type (max u w) where
@@ -45,12 +45,12 @@ def attr' (val : Array AttrText) : Except String String := do
   | .error e => .error e
   | .ok s => pure s
 
-private structure MDState where
+structure MDState where
   /-- A mapping from document header levels to actual nesting levels -/
   inHeaders : List (Nat × Nat) := []
 deriving Inhabited
 
-private abbrev MDT m block inline α := ReaderT (MDContext m block inline) (StateT MDState m) α
+abbrev MDT m block inline α := ReaderT (MDContext m block inline) (StateT MDState m) α
 
 instance {block inline} [Monad m] : MonadLift m (MDT m block inline) where
   monadLift act := fun _ s => act <&> (·, s)
