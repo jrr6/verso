@@ -381,8 +381,8 @@ def check
         m!"Stderr:\n{out.stderr}\n\nStdout:\n{out.stdout}\n\n"
     let json ← IO.FS.readFile (dirname / jsonFile)
     let json ← IO.ofExcept <| Json.parse json
-    let Json.arr json := json
-      | throwError m!"Expected a JSON aray, got {json}"
+    let .ok (Json.arr json) := json.getObjVal? "commands"
+      | throwError m!"Expected a JSON object with a 'commands' array, got {json}"
     let json ← json.mapM fun v =>
       match v.getObjVal? "code" with
       | .ok v => pure v
