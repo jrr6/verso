@@ -252,7 +252,7 @@ The arguments are as follows:
 -/
 def hintAt (ref : Syntax) (hint : MessageData) (suggestions : Array Suggestion) (codeActionPrefix? : Option String := none) : CoreM MessageData :=
   -- The @ guards against upstream signature changes going unnoticed
-  @MessageData.hint hint suggestions (ref? := some ref) (codeActionPrefix? := codeActionPrefix?)
+  return MessageData.hint' hint
 
 local instance : Coe (Array String) (Array Suggestion) where
   coe xs := xs.map ({suggestion := .string ·})
@@ -356,14 +356,14 @@ def module : CodeBlockExpander
         let ref ← getRef
         let h ←
           if let some s ← editCodeBlock ref hlString then
-            hint m!"" #[codeBlockSuggestion s]
+            pure <| MessageData.hint' m!""
           else pure m!""
         logErrorAt ref <| m!"Missing code." ++ h
       else if let some mismatch ← ExpectString.expectStringOrDiff code (hlString |> withNl) (useLine := fun l => !l.trim.isEmpty) then
         let ref ← getRef
         let h ←
           if let some s ← editCodeBlock ref hlString then
-            hint m!"" #[codeBlockSuggestion s]
+            pure <| MessageData.hint' m!""
           else pure m!""
         logErrorAt code <| m!"Mismatched code:{indentD mismatch}" ++ h
       pure #[← ``(leanBlock $(quote hl))]
@@ -526,7 +526,7 @@ def moduleTermBlock : CodeBlockExpander
           editCodeBlock ref s
         let h ←
           if suggs.size > 0 then
-            hint m!"Use one of these" suggs
+            pure <| MessageData.hint' m!"Use one of these"
           else pure m!""
         let wanted := String.trim <| ExpectString.abbreviateString (maxLength := 100) <| hl.toString
         let wanted := wanted.splitOn "\n" |>.map (Std.Format.text ·) |> Std.Format.nil.joinSuffix
@@ -540,7 +540,7 @@ def moduleTermBlock : CodeBlockExpander
         let suggs := suggestTerms hl str
         let suggs ← suggs.filterMapM fun s =>
           editCodeBlock ref s
-        let h ← hint "Use one of these" suggs
+        let h := MessageData.hint' "Use one of these"
         logErrorAt term (m!"Not found: '{str}' in: {indentD <| ExpectString.abbreviateString (maxLength := 100) <| hl.toString}" ++ h)
         return #[← ``(sorryAx _ true)]
 
@@ -800,10 +800,10 @@ private def suggest : InlineExpander
       otherSuggestions.map (fun (r, x, m) => "{" ++ r ++ " " ++ x ++ s!" (module:={m})" ++ "}`" ++ str' ++ "`")
 
     if suggestions.isEmpty then
-      let h ← hint m!"Add the `lit` role to indicate that it denotes literal characters:" #["{lit}`" ++ str' ++ "`"]
+      let h := MessageData.hint' m!"Add the `lit` role to indicate that it denotes literal characters:"
       logWarning <| m!"Code element is missing a role." ++ h
     else
-      let h ← hint m!"Try one of these:" suggestions
+      let h := MessageData.hint' m!"Try one of these:"
       logWarning <| m!"Code element could be highlighted." ++ h
 
     return (← ``(Inline.code $(quote str.getString)))

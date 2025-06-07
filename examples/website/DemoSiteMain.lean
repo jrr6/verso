@@ -59,20 +59,20 @@ def theme : Theme := { Theme.default with
 
 
 
-def_literate_page litPage from LitLean in "examples/website-literate" as "Literate Lean page"
+-- def_literate_page litPage from LitLean in "examples/website-literate" as "Literate Lean page"
 
-def_literate_post litPost from LitLean in "examples/website-literate" as "Literate Lean (post)" with {
-  authors := ["An Author"]
-  date := ⟨2025, 4, 4⟩
-}
+-- def_literate_post litPost from LitLean in "examples/website-literate" as "Literate Lean (post)" with {
+--   authors := ["An Author"]
+--   date := ⟨2025, 4, 4⟩
+-- }
 
 
 def demoSite : Site := site DemoSite.Front /
   static "static" ← "examples/website/static_files"
   "about" DemoSite.About
-  "PHOAS" litPage
+  -- "PHOAS" litPage
   "blog" DemoSite.Blog with
-    litPost
+    -- litPost
     DemoSite.Blog.AnchorBased
     DemoSite.Blog.Subprojects
     DemoSite.Blog.Conditionals
