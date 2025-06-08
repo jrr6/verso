@@ -1856,7 +1856,9 @@ info: Success! Final stack:
    (Term.structInstFields
     [(Term.structInstField
       (Term.structInstLVal `foo [])
-      [[] [] (Term.structInstFieldDef ":=" `bar)])
+      [[]
+       []
+       (Term.structInstFieldDef ":=" [] `bar)])
      []])
    "%%%")
 All input consumed.
@@ -1871,7 +1873,9 @@ info: Success! Final stack:
    (Term.structInstFields
     [(Term.structInstField
       (Term.structInstLVal `foo [])
-      [[] [] (Term.structInstFieldDef ":=" `bar)])
+      [[]
+       []
+       (Term.structInstFieldDef ":=" [] `bar)])
      []
      (Term.structInstField
       (Term.structInstLVal `x [])
@@ -4090,6 +4094,7 @@ info: Success! Final stack:
         []
         (Term.structInstFieldDef
          ":="
+         []
          (num "53"))])
       []])
     "%%%")
