@@ -24,7 +24,7 @@ here as ordered handlers, rather than as a mapping from levels to handlers.
 Because we're rendering Markdown in a Verso context that doesn't support nesting structure, will not
 generate nested `Part`s, but rather some custom node or some formatted text.
 -/
-structure HeaderHandlers (m : Type u → Type w) (block : Type u) (inline : Type v) : Type (max u v w) where
+private structure HeaderHandlers (m : Type u → Type w) (block : Type u) (inline : Type v) : Type (max u v w) where
   levels : List (Array inline → m block) := []
 
 structure MDContext (m : Type u → Type w) (block : Type u) (inline : Type u) : Type (max u w) where
@@ -47,12 +47,12 @@ def attr' (val : Array AttrText) : Except String String := do
   | .error e => .error e
   | .ok s => pure s
 
-structure MDState where
+private structure MDState where
   /-- A mapping from document header levels to actual nesting levels -/
   inHeaders : List (Nat × Nat) := []
 deriving Inhabited
 
-abbrev MDT m block inline α := ReaderT (MDContext m block inline) (StateT MDState m) α
+private abbrev MDT m block inline α := ReaderT (MDContext m block inline) (StateT MDState m) α
 
 instance {block inline} [Monad m] : MonadLift m (MDT m block inline) where
   monadLift act := fun _ s => act <&> (·, s)
@@ -220,22 +220,22 @@ def strongEmphHeaders' : List (Array (Doc.Inline g) → Except String (Doc.Block
   fun inls => pure <| .para #[.emph inls]
 ]
 
-private partial def stringFromMarkdownText : Text → Except String String
+partial def stringFromMarkdownText : Text → Except String String
   | .normal str | .br str | .softbr str => pure str
   | .nullchar => .error "Unepxected null character in parsed Markdown"
   | .del _ => .error "Unexpected strikethrough in parsed Markdown"
-  | .em txt => arrToStr <| txt.mapM stringFromMarkdownText
-  | .strong txt => arrToStr <| txt.mapM stringFromMarkdownText
-  | .a _ _ _ txt => arrToStr <| txt.mapM stringFromMarkdownText
+  | .em txt => joinArrM <| txt.mapM stringFromMarkdownText
+  | .strong txt => joinArrM <| txt.mapM stringFromMarkdownText
+  | .a _ _ _ txt => joinArrM <| txt.mapM stringFromMarkdownText
   | .latexMath m => pure <| String.join m.toList
   | .latexMathDisplay m =>  pure <| String.join m.toList
   | .u txt => .error s!"Unexpected underline around {repr txt} in parsed Markdown:"
-  | .code str => pure <| String.join str.toList
+  | .code strs => pure <| String.join strs.toList
   | .entity ent => .error s!"Unsupported entity {ent} in parsed Markdown"
   | .img .. => .error s!"Unexpected image in parsed Markdown"
   | .wikiLink .. => .error s!"Unexpected wiki-style link in parsed Markdown"
 where
-  arrToStr (x : Except String (Array String)) : Except String String :=
+  joinArrM (x : Except String (Array String)) : Except String String :=
     return String.join (← x).toList
 
 open Verso.Doc.Elab
